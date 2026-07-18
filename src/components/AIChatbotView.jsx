@@ -16,7 +16,7 @@ export default function AIChatbotView() {
   }, [messages, loading]);
 
   const suggestions = [
-    "Draft a 2-day schedule for a calculus exam",
+    "Draft a 3-day schedule for a calculus exam",
     "Explain the Difference between TCP and UDP",
     "Give me 5 practice questions for Python loops",
     "Explain database normalization in simple words"
