@@ -92,20 +92,27 @@ studentsupport-ai/
 │   ├── main.py
 │   ├── requirements.txt
 │   ├── .env.example
+│   ├── database/
+│   │   └── studentsupport.db
 │   └── static/
 │
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── AIChatbotView.jsx
-    │   │   ├── ProductivityView.jsx
-    │   │   ├── CareerServicesView.jsx
-    │   │   ├── StudyTimerView.jsx
-    │   │   └── CGPAView.jsx
-    │   ├── App.jsx
-    │   └── main.jsx
-    ├── package.json
-    └── vite.config.js
+├── frontend/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── AIChatbotView.jsx
+│   │   │   ├── ProductivityView.jsx
+│   │   │   ├── CareerServicesView.jsx
+│   │   │   ├── StudyTimerView.jsx
+│   │   │   └── CGPAView.jsx
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   ├── package.json
+│   ├── package-lock.json
+│   └── vite.config.js
+│
+├── .gitignore
+├── LICENSE
+└── README.md
 ```
 
 ---
