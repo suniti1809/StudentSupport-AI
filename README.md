@@ -34,7 +34,7 @@
 
 # 🚀 Overview
 
-StudentSupport AI is a **Full-Stack Generative AI web application** designed to provide students with intelligent academic support through AI-powered conversations and productivity tools.
+StudentSupport AI is a **Generative AI web application** designed to provide students with intelligent academic support through AI-powered conversations and productivity tools.
 
 The application integrates the **Groq API** with the **Llama 3.1 Large Language Model (LLM)** to generate context-aware, real-time responses for academic queries. Instead of relying on predefined answers, the AI understands user prompts and generates personalized responses instantly.
 
