@@ -542,9 +542,10 @@ def start_timer():
     if minutes <= 0:
         return jsonify({"error": "Minutes must be positive"}), 400
     return jsonify({"seconds": minutes * 60})
-
 # ---------------------------------------------------------------------
 # Run application
 # ---------------------------------------------------------------------
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=8000, debug=True)
+    # Get port from environment variable set by Render (defaults to 10000 locally)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
