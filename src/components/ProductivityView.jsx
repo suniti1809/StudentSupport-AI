@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Calendar, CheckSquare, Clock, Plus, Trash2, CheckCircle2, ChevronRight, Award } from 'lucide-react';
+import { Calendar, CheckSquare, Clock, Trash2, ChevronRight, Award } from 'lucide-react';
 
 export default function ProductivityView() {
   const [activeSubTab, setActiveSubTab] = useState('planner'); // planner, assignments, reminders
+  const [activeKanbanCol, setActiveKanbanCol] = useState('Pending'); // For mobile column switching
 
   // Study Planner states
   const [plannerItems, setPlannerItems] = useState([]);
@@ -142,7 +143,10 @@ export default function ProductivityView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ...currentAss, status: nextStatus })
       });
-      if (res.ok) fetchAssignments();
+      if (res.ok) {
+        fetchAssignments();
+        setActiveKanbanCol(nextStatus);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -215,10 +219,10 @@ export default function ProductivityView() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
       {/* Sub Tabs Navigation */}
-      <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-glass)', paddingBottom: '12px' }}>
+      <div className="subtabs-bar">
         <button 
           className={`btn ${activeSubTab === 'planner' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveSubTab('planner')}
@@ -261,12 +265,12 @@ export default function ProductivityView() {
                 <label>Due Date</label>
                 <input 
                   type="date" 
-                  className="input-text"
+                  className="input-text" 
                   value={newPlanDue}
                   onChange={e => setNewPlanDue(e.target.value)}
                 />
               </div>
-              <button type="submit" className="btn btn-primary">Add task to plan</button>
+              <button type="submit" className="btn btn-primary" style={{ minHeight: '44px' }}>Add task to plan</button>
             </form>
           </div>
 
@@ -279,19 +283,20 @@ export default function ProductivityView() {
               ) : (
                 plannerItems.map(item => (
                   <div key={item.id} className={`planner-item-row ${item.completed ? 'completed' : ''}`}>
-                    <div>
+                    <div style={{ flex: 1, minWidth: 0, marginRight: '10px' }}>
                       <div className="planner-title">{item.title}</div>
                       <div className="planner-due">
                         <Clock size={12} /> Due: {item.due_date ? item.due_date : 'No deadline'}
                       </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
                       {!item.completed && (
                         <button 
                           className="btn-icon-only" 
                           style={{ color: 'var(--accent-green)', background: 'rgba(16, 185, 129, 0.1)' }}
                           onClick={() => completePlannerItem(item.id)}
                           title="Complete Task"
+                          aria-label="Complete task"
                         >
                           ✓
                         </button>
@@ -301,6 +306,7 @@ export default function ProductivityView() {
                         style={{ color: 'var(--accent-red)', background: 'rgba(239, 68, 68, 0.1)' }}
                         onClick={() => deletePlannerItem(item.id)}
                         title="Delete Task"
+                        aria-label="Delete task"
                       >
                         <Trash2 size={14} />
                       </button>
@@ -315,11 +321,11 @@ export default function ProductivityView() {
 
       {/* ----------------- SUB-TAB: ASSIGNMENT TRACKER ----------------- */}
       {activeSubTab === 'assignments' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Add Assignment Form Panel */}
           <div className="glass-card">
             <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>Register Academic Assignment</h3>
-            <form onSubmit={addAssignment} style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px', alignItems: 'end' }}>
+            <form onSubmit={addAssignment} className="assignment-form-grid">
               <div className="form-group" style={{ margin: '0' }}>
                 <label>Assignment Title</label>
                 <input 
@@ -376,10 +382,28 @@ export default function ProductivityView() {
                   onChange={e => setNewAssGrade(e.target.value)}
                 />
               </div>
-              <div style={{ gridColumn: 'span 3', display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px' }}>Add Assignment</button>
+              <div className="assignment-submit-col">
+                <button type="submit" className="btn btn-primary" style={{ padding: '12px 24px', minHeight: '44px' }}>Add Assignment</button>
               </div>
             </form>
+          </div>
+
+          {/* Mobile column switcher tabs (< 768px) */}
+          <div className="mobile-column-tabs">
+            {['Pending', 'Submitted', 'Graded'].map(status => {
+              const count = assignments.filter(a => a.status === status).length;
+              return (
+                <button
+                  key={status}
+                  type="button"
+                  className={`mobile-tab-btn ${activeKanbanCol === status ? 'active' : ''}`}
+                  onClick={() => setActiveKanbanCol(status)}
+                >
+                  <span className={`status-pill-dot ${status.toLowerCase()}`}></span>
+                  {status} <span className="tab-count">({count})</span>
+                </button>
+              );
+            })}
           </div>
 
           {/* Kanban Board View */}
@@ -387,8 +411,9 @@ export default function ProductivityView() {
             {/* Columns */}
             {['Pending', 'Submitted', 'Graded'].map(status => {
               const list = assignments.filter(a => a.status === status);
+              const isColActiveOnMobile = activeKanbanCol === status;
               return (
-                <div key={status} className="kanban-column">
+                <div key={status} className={`kanban-column ${isColActiveOnMobile ? 'mobile-visible' : ''}`}>
                   <div className="kanban-col-header">
                     <h4>
                       {status === 'Pending' && <span style={{ width: '8px', height: '8px', background: 'var(--accent-red)', borderRadius: '50%' }}></span>}
@@ -401,7 +426,7 @@ export default function ProductivityView() {
 
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: '1', maxHeight: '420px', paddingRight: '4px' }}>
                     {list.length === 0 ? (
-                      <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '12px', textAlign: 'center', marginTop: '20px' }}>No items</p>
+                      <p style={{ color: 'var(--text-muted)', fontStyle: 'italic', fontSize: '12px', textAlign: 'center', marginTop: '20px' }}>No items in this status</p>
                     ) : (
                       list.map(ass => (
                         <div key={ass.id} className="assignment-card">
@@ -422,7 +447,7 @@ export default function ProductivityView() {
                                   type="text" 
                                   placeholder="Set Grade" 
                                   className="input-text" 
-                                  style={{ padding: '2px 6px', fontSize: '11px', width: '70px', height: '22px' }}
+                                  style={{ padding: '2px 6px', fontSize: '12px', width: '80px', height: '26px' }}
                                   onBlur={(e) => updateAssignmentGrade(ass.id, ass, e.target.value)}
                                   onKeyDown={(e) => { if (e.key === 'Enter') updateAssignmentGrade(ass.id, ass, e.target.value) }}
                                 />
@@ -434,17 +459,17 @@ export default function ProductivityView() {
                             <span>📅 Due: {ass.due_date ? ass.due_date : 'No deadline'}</span>
                             <div className="assignment-actions">
                               {status === 'Pending' && (
-                                <button className="btn-icon-only" style={{ width: '22px', height: '22px', borderRadius: '4px' }} onClick={() => updateAssignmentStatus(ass.id, ass, 'Submitted')} title="Mark Submitted">
-                                  <ChevronRight size={12} />
+                                <button className="btn-icon-only" style={{ width: '28px', height: '28px', borderRadius: '6px' }} onClick={() => updateAssignmentStatus(ass.id, ass, 'Submitted')} title="Mark Submitted" aria-label="Mark Submitted">
+                                  <ChevronRight size={14} />
                                 </button>
                               )}
                               {status === 'Submitted' && (
-                                <button className="btn-icon-only" style={{ width: '22px', height: '22px', borderRadius: '4px' }} onClick={() => updateAssignmentStatus(ass.id, ass, 'Graded')} title="Mark Graded">
-                                  <ChevronRight size={12} />
+                                <button className="btn-icon-only" style={{ width: '28px', height: '28px', borderRadius: '6px' }} onClick={() => updateAssignmentStatus(ass.id, ass, 'Graded')} title="Mark Graded" aria-label="Mark Graded">
+                                  <ChevronRight size={14} />
                                 </button>
                               )}
-                              <button className="btn-icon-only" style={{ width: '22px', height: '22px', borderRadius: '4px', color: 'var(--accent-red)' }} onClick={() => deleteAssignment(ass.id)} title="Delete Assignment">
-                                <Trash2 size={10} />
+                              <button className="btn-icon-only" style={{ width: '28px', height: '28px', borderRadius: '6px', color: 'var(--accent-red)' }} onClick={() => deleteAssignment(ass.id)} title="Delete Assignment" aria-label="Delete Assignment">
+                                <Trash2 size={12} />
                               </button>
                             </div>
                           </div>
@@ -487,7 +512,7 @@ export default function ProductivityView() {
                   required
                 />
               </div>
-              <button type="submit" className="btn btn-primary">Schedule Alert</button>
+              <button type="submit" className="btn btn-primary" style={{ minHeight: '44px' }}>Schedule Alert</button>
             </form>
           </div>
 
@@ -500,15 +525,16 @@ export default function ProductivityView() {
               ) : (
                 reminders.map(rem => (
                   <div key={rem.id} className="planner-item-row" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0, marginRight: '10px' }}>
                       <input 
                         type="checkbox" 
                         checked={Boolean(rem.completed)}
                         onChange={(e) => toggleReminder(rem.id, e.target.checked)}
-                        style={{ cursor: 'pointer', width: '16px', height: '16px' }}
+                        style={{ cursor: 'pointer', width: '18px', height: '18px', flexShrink: 0 }}
+                        aria-label="Toggle reminder completion"
                       />
-                      <div style={{ opacity: rem.completed ? 0.5 : 1 }}>
-                        <span style={{ fontSize: '14px', fontWeight: '600', textDecoration: rem.completed ? 'line-through' : 'none' }}>
+                      <div style={{ opacity: rem.completed ? 0.5 : 1, minWidth: 0 }}>
+                        <span style={{ fontSize: '14px', fontWeight: '600', textDecoration: rem.completed ? 'line-through' : 'none', wordBreak: 'break-word', display: 'block' }}>
                           {rem.message}
                         </span>
                         <div style={{ fontSize: '11px', color: 'var(--text-secondary)', marginTop: '2px' }}>
@@ -516,8 +542,13 @@ export default function ProductivityView() {
                         </div>
                       </div>
                     </div>
-                    <button className="btn-icon-only" style={{ color: 'var(--accent-red)', background: 'rgba(239, 68, 68, 0.1)' }} onClick={() => deleteReminder(rem.id)}>
-                      <Trash2 size={12} />
+                    <button 
+                      className="btn-icon-only" 
+                      style={{ color: 'var(--accent-red)', background: 'rgba(239, 68, 68, 0.1)', flexShrink: 0 }} 
+                      onClick={() => deleteReminder(rem.id)}
+                      aria-label="Delete reminder"
+                    >
+                      <Trash2 size={13} />
                     </button>
                   </div>
                 ))
