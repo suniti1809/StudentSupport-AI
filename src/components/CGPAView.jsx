@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Award, Plus, Trash2, HelpCircle } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 export default function CGPAView() {
   const [gpa, setGpa] = useState('');
@@ -120,10 +120,15 @@ export default function CGPAView() {
               semesters.map((sem, idx) => (
                 <div key={idx} className="sem-grid-row">
                   <strong>Semester {idx + 1}</strong>
-                  <span style={{ fontSize: '12px', color: 'var(--text-secondary)' }}>Credits: {sem.credits}</span>
-                  <span style={{ fontSize: '12px', color: 'var(--accent)' }}>SGPA: {sem.gpa.toFixed(2)}</span>
-                  <button className="btn-icon-only" style={{ width: '22px', height: '22px', borderRadius: '4px', color: 'var(--accent-red)' }} onClick={() => handleDeleteSemester(idx)}>
-                    <Trash2 size={10} />
+                  <span className="sem-credit-tag">Credits: {sem.credits}</span>
+                  <span className="sem-sgpa-tag">SGPA: {sem.gpa.toFixed(2)}</span>
+                  <button 
+                    className="btn-icon-only" 
+                    style={{ width: '32px', height: '32px', borderRadius: '6px', color: 'var(--accent-red)' }} 
+                    onClick={() => handleDeleteSemester(idx)}
+                    aria-label={`Delete semester ${idx + 1}`}
+                  >
+                    <Trash2 size={13} />
                   </button>
                 </div>
               ))
