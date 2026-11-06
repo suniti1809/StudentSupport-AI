@@ -186,7 +186,7 @@ def chat_endpoint():
         messages.append({"role": msg.get("role", "user"), "content": msg.get("content", "")})
     messages.append({"role": "user", "content": message})
 
-    models_to_try = ["llama-3.3-70b-versatile", "llama-3.1-8b-instant"]
+    models_to_try = ["openai/gpt-oss-120b", "openai/gpt-oss-20b"]
     
     for model_name in models_to_try:
         try:
