@@ -3,6 +3,7 @@ import { Briefcase, FileText, Compass, Send, Search, Trash2, ClipboardCheck } fr
 
 export default function CareerServicesView() {
   const [activeTab, setActiveTab] = useState('resume'); // resume, mock, finder, guidance
+  const [activeCareerCol, setActiveCareerCol] = useState('Applied'); // For mobile column switching
 
   // ----------------------------------------------------
   // Resume Builder States
@@ -21,7 +22,6 @@ export default function CareerServicesView() {
     experienceDesc: 'Developed React widgets and integrated SQLite databases. Reduced payload fetch times by 20% by implementing caching.',
     skills: 'React, JavaScript, Python, SQLite, Flask, Git'
   });
-  const [editingResume, setEditingResume] = useState(false);
 
   // ----------------------------------------------------
   // Mock Interview States
@@ -54,7 +54,6 @@ export default function CareerServicesView() {
     setInterviewLoading(true);
 
     try {
-      // Send chat request with mode 'mock_interview' and selected role
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -66,7 +65,7 @@ export default function CareerServicesView() {
         })
       });
       const data = await res.json();
-      setMessagesForInterview(prev => [...prev, { role: 'assistant', content: data.reply }]);
+      setInterviewMessages(prev => [...prev, { role: 'assistant', content: data.reply }]);
     } catch (err) {
       console.error(err);
     } finally {
@@ -74,27 +73,14 @@ export default function CareerServicesView() {
     }
   };
 
-  // Helper hook to bypass scope
-  const setMessagesForInterview = (callback) => {
-    setInterviewMessages(callback);
-  };
-
   // ----------------------------------------------------
   // Internship Finder States
   // ----------------------------------------------------
   const [applications, setApplications] = useState([]);
-  const [searchQuery, setSearchQuery] = useState('');
   
-  // New application inputs
-  const [newAppTitle, setNewAppTitle] = useState('');
-  const [newAppCompany, setNewAppCompany] = useState('');
-  const [newAppUrl, setNewAppUrl] = useState('');
-  const [newAppNotes, setNewAppNotes] = useState('');
-
-  // Simulated live jobs to "add"
   const simulatedJobs = [
     { title: "Frontend Engineering Intern", company: "Google", url: "https://careers.google.com", location: "Mountain View, CA" },
-    { title: "Junior Python developer", company: "Spotify", url: "https://lifeatspotify.com", location: "New York, NY" },
+    { title: "Junior Python Developer", company: "Spotify", url: "https://lifeatspotify.com", location: "New York, NY" },
     { title: "Data Analyst Internship", company: "Amazon", url: "https://amazon.jobs", location: "Seattle, WA" },
     { title: "Systems Engineering Intern", company: "Microsoft", url: "https://careers.microsoft.com", location: "Redmond, WA" }
   ];
@@ -120,20 +106,13 @@ export default function CareerServicesView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title, company, url, notes, status: 'Applied' })
       });
-      if (res.ok) fetchApplications();
+      if (res.ok) {
+        fetchApplications();
+        setActiveCareerCol('Applied');
+      }
     } catch (err) {
       console.error(err);
     }
-  };
-
-  const handleManualAddApp = async (e) => {
-    e.preventDefault();
-    if (!newAppTitle.trim() || !newAppCompany.trim()) return;
-    await addApplication(newAppTitle, newAppCompany, newAppUrl, newAppNotes);
-    setNewAppTitle('');
-    setNewAppCompany('');
-    setNewAppUrl('');
-    setNewAppNotes('');
   };
 
   const updateAppStatus = async (id, currentStatus) => {
@@ -147,7 +126,10 @@ export default function CareerServicesView() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: nextStatus })
       });
-      if (res.ok) fetchApplications();
+      if (res.ok) {
+        fetchApplications();
+        setActiveCareerCol(nextStatus);
+      }
     } catch (err) {
       console.error(err);
     }
@@ -196,10 +178,10 @@ export default function CareerServicesView() {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
       
-      {/* Sub-tabs */}
-      <div style={{ display: 'flex', gap: '12px', borderBottom: '1px solid var(--border-glass)', paddingBottom: '12px' }}>
+      {/* Sub-tabs Navigation */}
+      <div className="subtabs-bar">
         <button 
           className={`btn ${activeTab === 'resume' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('resume')}
@@ -237,7 +219,7 @@ export default function CareerServicesView() {
                 <label>Full Name</label>
                 <input type="text" className="input-text" value={resumeData.fullName} onChange={e => setResumeData({...resumeData, fullName: e.target.value})} />
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="form-row-adaptive">
                 <div className="form-group" style={{ flex: 1 }}>
                   <label>Email</label>
                   <input type="email" className="input-text" value={resumeData.email} onChange={e => setResumeData({...resumeData, email: e.target.value})} />
@@ -247,7 +229,7 @@ export default function CareerServicesView() {
                   <input type="text" className="input-text" value={resumeData.phone} onChange={e => setResumeData({...resumeData, phone: e.target.value})} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="form-row-adaptive">
                 <div className="form-group" style={{ flex: 2 }}>
                   <label>College / University</label>
                   <input type="text" className="input-text" value={resumeData.college} onChange={e => setResumeData({...resumeData, college: e.target.value})} />
@@ -257,7 +239,7 @@ export default function CareerServicesView() {
                   <input type="text" className="input-text" value={resumeData.gpa} onChange={e => setResumeData({...resumeData, gpa: e.target.value})} />
                 </div>
               </div>
-              <div style={{ display: 'flex', gap: '12px' }}>
+              <div className="form-row-adaptive">
                 <div className="form-group" style={{ flex: 2 }}>
                   <label>Degree & Major</label>
                   <input type="text" className="input-text" value={resumeData.degree} onChange={e => setResumeData({...resumeData, degree: e.target.value})} />
@@ -269,7 +251,7 @@ export default function CareerServicesView() {
               </div>
               <div style={{ borderTop: '1px solid var(--border-glass)', paddingTop: '12px' }}>
                 <h4 style={{ fontSize: '14px', marginBottom: '8px' }}>Recent Work / Project Experience</h4>
-                <div style={{ display: 'flex', gap: '12px' }}>
+                <div className="form-row-adaptive">
                   <div className="form-group" style={{ flex: 1 }}>
                     <label>Role Title</label>
                     <input type="text" className="input-text" value={resumeData.experienceTitle} onChange={e => setResumeData({...resumeData, experienceTitle: e.target.value})} />
@@ -353,7 +335,7 @@ export default function CareerServicesView() {
         <div className="glass-card" style={{ padding: '0', overflow: 'hidden' }}>
           {/* Header setup if not started */}
           {!interviewStarted ? (
-            <div style={{ padding: '40px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
+            <div style={{ padding: '32px 20px', textAlign: 'center', maxWidth: '500px', margin: '0 auto' }}>
               <Briefcase size={40} className="gradient-text" style={{ marginBottom: '16px' }} />
               <h3 style={{ fontSize: '20px', marginBottom: '12px' }}>AI Mock Interview Recruiter</h3>
               <p style={{ color: 'var(--text-secondary)', fontSize: '13px', lineHeight: '1.6', marginBottom: '24px' }}>
@@ -368,24 +350,24 @@ export default function CareerServicesView() {
                   <option value="Database Administrator">Database Administrator</option>
                 </select>
               </div>
-              <button className="btn btn-primary" onClick={startInterview} style={{ width: '100%' }}>
+              <button className="btn btn-primary" onClick={startInterview} style={{ width: '100%', minHeight: '44px' }}>
                 Start Practice Session
               </button>
             </div>
           ) : (
             <div>
               {/* Active chat window */}
-              <div style={{ padding: '16px 24px', borderBottom: '1px solid var(--border-glass)', background: 'rgba(99,102,241,0.05)', display: 'flex', justifyContent: 'space-between' }}>
+              <div style={{ padding: '14px 18px', borderBottom: '1px solid var(--border-glass)', background: 'rgba(99,102,241,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                 <div>
                   <h4 style={{ fontSize: '14px', color: '#fff' }}>Mock Recruiter ({interviewRole})</h4>
                   <p style={{ fontSize: '10px', color: 'var(--text-secondary)' }}>Ongoing technical screening</p>
                 </div>
-                <button className="btn btn-secondary" style={{ padding: '4px 8px', fontSize: '11px' }} onClick={() => setInterviewStarted(false)}>
+                <button className="btn btn-secondary" style={{ padding: '6px 12px', fontSize: '11px' }} onClick={() => setInterviewStarted(false)}>
                   Reset Session
                 </button>
               </div>
 
-              <div className="chat-layout" style={{ height: '55vh' }}>
+              <div className="chat-layout" style={{ height: 'min(55vh, calc(100dvh - 280px))' }}>
                 <div className="chat-messages" style={{ padding: '16px' }}>
                   {interviewMessages.map((msg, index) => (
                     <div key={index} className={`chat-bubble ${msg.role === 'user' ? 'user' : 'bot'}`}>
@@ -415,7 +397,7 @@ export default function CareerServicesView() {
                     onChange={e => setInterviewInput(e.target.value)}
                     onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSendInterview(); } }}
                   />
-                  <button className="btn btn-primary" onClick={handleSendInterview} style={{ height: '44px', width: '44px', borderRadius: '12px', padding: '0' }}>
+                  <button className="btn btn-primary" onClick={handleSendInterview} style={{ height: '44px', width: '44px', borderRadius: '12px', padding: '0', flexShrink: 0 }}>
                     <Send size={16} />
                   </button>
                 </div>
@@ -427,25 +409,25 @@ export default function CareerServicesView() {
 
       {/* ----------------- TAB: INTERNSHIP FINDER ----------------- */}
       {activeTab === 'finder' && (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Simulated search list */}
           <div className="glass-card">
-            <h3 style={{ fontSize: '18px', marginBottom: '12px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Search size={18} className="gradient-text" /> Find simulated openings
+            <h3 style={{ fontSize: '18px', marginBottom: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Search size={18} className="gradient-text" /> Find Simulated Openings
             </h3>
             <p style={{ color: 'var(--text-secondary)', fontSize: '13px', marginBottom: '16px' }}>
               Apply for simulation jobs below to log them automatically to your applications tracker.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '16px' }}>
+            <div className="simulated-jobs-grid">
               {simulatedJobs.map(job => (
-                <div key={job.title} className="planner-item-row" style={{ padding: '16px' }}>
-                  <div>
-                    <h4 style={{ fontSize: '14px', color: '#fff' }}>{job.title}</h4>
-                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)' }}>{job.company}  |  📍 {job.location}</span>
+                <div key={job.title} className="planner-item-row" style={{ padding: '14px' }}>
+                  <div style={{ flex: 1, minWidth: 0, marginRight: '10px' }}>
+                    <h4 style={{ fontSize: '14px', color: '#fff', wordBreak: 'break-word' }}>{job.title}</h4>
+                    <span style={{ fontSize: '11px', color: 'var(--text-secondary)', display: 'block', marginTop: '2px' }}>{job.company}  |  📍 {job.location}</span>
                   </div>
                   <button 
                     className="btn btn-primary" 
-                    style={{ padding: '6px 12px', fontSize: '12px' }}
+                    style={{ padding: '8px 14px', fontSize: '12px', flexShrink: 0 }}
                     onClick={() => addApplication(job.title, job.company, job.url, 'Added from simulated listings')}
                   >
                     Quick Add
@@ -457,22 +439,40 @@ export default function CareerServicesView() {
 
           {/* Kanban style Application status board */}
           <div>
-            <h3 style={{ fontSize: '18px', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <h3 style={{ fontSize: '18px', marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px' }}>
               <ClipboardCheck size={18} className="gradient-text" /> Internship Application Board
             </h3>
+
+            {/* Mobile Column switcher tabs (< 768px) */}
+            <div className="mobile-column-tabs">
+              {['Applied', 'Interviewing', 'Offer', 'Rejected'].map(status => {
+                const count = applications.filter(a => a.status === status).length;
+                return (
+                  <button
+                    key={status}
+                    type="button"
+                    className={`mobile-tab-btn ${activeCareerCol === status ? 'active' : ''}`}
+                    onClick={() => setActiveCareerCol(status)}
+                  >
+                    {status} <span className="tab-count">({count})</span>
+                  </button>
+                );
+              })}
+            </div>
             
             <div className="career-board">
               {['Applied', 'Interviewing', 'Offer', 'Rejected'].map(status => {
                 const list = applications.filter(a => a.status === status);
+                const isColActiveOnMobile = activeCareerCol === status;
                 return (
-                  <div key={status} className="career-column">
+                  <div key={status} className={`career-column ${isColActiveOnMobile ? 'mobile-visible' : ''}`}>
                     <div className="career-col-header">
                       <span>{status}</span>
                       <span className="badge-count">{list.length}</span>
                     </div>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', overflowY: 'auto', flex: '1', maxHeight: '350px' }}>
                       {list.length === 0 ? (
-                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', marginTop: '10px' }}>Empty</p>
+                        <p style={{ color: 'var(--text-muted)', fontSize: '11px', textAlign: 'center', marginTop: '14px' }}>No applications</p>
                       ) : (
                         list.map(app => (
                           <div key={app.id} className="job-card">
@@ -484,19 +484,21 @@ export default function CareerServicesView() {
                             <div className="job-actions">
                               <button 
                                 className="btn-icon-only" 
-                                style={{ width: '22px', height: '22px', borderRadius: '4px', background: 'rgba(99,102,241,0.1)' }}
+                                style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(99,102,241,0.1)' }}
                                 onClick={() => updateAppStatus(app.id, app.status)}
                                 title="Progress Status"
+                                aria-label="Progress status"
                               >
                                 →
                               </button>
                               <button 
                                 className="btn-icon-only" 
-                                style={{ width: '22px', height: '22px', borderRadius: '4px', background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)' }}
+                                style={{ width: '28px', height: '28px', borderRadius: '6px', background: 'rgba(239,68,68,0.1)', color: 'var(--accent-red)' }}
                                 onClick={() => deleteApplication(app.id)}
                                 title="Delete application"
+                                aria-label="Delete application"
                               >
-                                <Trash2 size={10} />
+                                <Trash2 size={12} />
                               </button>
                             </div>
                           </div>
@@ -525,14 +527,14 @@ export default function CareerServicesView() {
                 <label>Tell us about your interests, skills, or major</label>
                 <textarea 
                   className="textarea-input" 
-                  rows="6" 
+                  rows="5" 
                   placeholder="e.g. I am in my sophomore year of CS, know basic Python and SQL, and am interested in Data Engineering or Cloud Systems. What should I build?"
                   value={guidanceInquiry}
                   onChange={e => setGuidanceInquiry(e.target.value)}
                   required
                 />
               </div>
-              <button type="submit" className="btn btn-primary" disabled={guidanceLoading}>
+              <button type="submit" className="btn btn-primary" disabled={guidanceLoading} style={{ minHeight: '44px' }}>
                 Generate Career Roadmap
               </button>
             </form>
@@ -543,7 +545,7 @@ export default function CareerServicesView() {
             <h3 style={{ fontSize: '18px', marginBottom: '16px' }}>Your Personal Strategy Roadmap</h3>
             <div style={{ flex: '1', minHeight: '200px', display: 'flex', flexDirection: 'column' }}>
               {guidanceLoading ? (
-                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: '1', gap: '12px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flex: '1', gap: '12px', minHeight: '180px' }}>
                   <div className="chat-loading">
                     <span>Advisor compiling strategy roadmap</span>
                   </div>
@@ -553,7 +555,7 @@ export default function CareerServicesView() {
                   {guidanceResult}
                 </div>
               ) : (
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1', color: 'var(--text-muted)', fontSize: '14px', fontStyle: 'italic', textAlign: 'center' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex: '1', color: 'var(--text-muted)', fontSize: '14px', fontStyle: 'italic', textAlign: 'center', minHeight: '160px' }}>
                   Enter your interests and click "Generate" to construct your personalized academic and skills roadmap.
                 </div>
               )}
