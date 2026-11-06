@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Play, Square, RefreshCw, Volume2, Award, Clock } from 'lucide-react';
+import { Play, Square, RefreshCw, Award } from 'lucide-react';
 
 export default function StudyTimerView() {
   const [minutes, setMinutes] = useState(25);
@@ -148,7 +148,7 @@ export default function StudyTimerView() {
         
         <div className={`timer-circle ${isActive ? 'active' : ''}`}>
           {/* SVG Progress Ring */}
-          <svg className="timer-svg" width="266" height="266">
+          <svg className="timer-svg" width="266" height="266" viewBox="0 0 266 266">
             <circle 
               className="timer-svg-circle" 
               cx="133" 
