@@ -73,29 +73,30 @@ export default function AIChatbotView() {
     <div className="glass-card" style={{ padding: '0px', overflow: 'hidden' }}>
       {/* Header bar */}
       <div style={{
-        padding: '18px 24px',
+        padding: '14px 18px',
         borderBottom: '1px solid var(--border-glass)',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
         background: 'rgba(99, 102, 241, 0.05)'
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
-            width: '38px',
-            height: '38px',
+            width: '34px',
+            height: '34px',
             borderRadius: '10px',
             background: 'var(--grad-primary)',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             color: '#fff',
-            boxShadow: '0 0 10px rgba(99,102,241,0.3)'
+            boxShadow: '0 0 10px rgba(99,102,241,0.3)',
+            flexShrink: 0
           }}>
-            <Sparkles size={18} />
+            <Sparkles size={16} />
           </div>
           <div>
-            <h3 style={{ fontSize: '15px', fontWeight: '700' }}>StudentSupport Assistant</h3>
+            <h3 style={{ fontSize: '14px', fontWeight: '700' }}>StudentSupport Assistant</h3>
           </div>
         </div>
       </div>
