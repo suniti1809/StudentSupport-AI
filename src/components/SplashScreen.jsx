@@ -19,12 +19,13 @@ export default function SplashScreen({ onFinish }) {
     resize();
     window.addEventListener('resize', resize);
 
-    // Spawn particles
-    const count = 120;
+    // Spawn particles (fewer on mobile for 60fps smoothness)
+    const isMobile = window.innerWidth < 768;
+    const count = isMobile ? 60 : 120;
     particlesRef.current = Array.from({ length: count }, () => ({
       x: Math.random() * canvas.width,
       y: Math.random() * canvas.height,
-      r: Math.random() * 2.5 + 0.5,
+      r: Math.random() * 2 + 0.5,
       dx: (Math.random() - 0.5) * 0.6,
       dy: (Math.random() - 0.5) * 0.6,
       alpha: Math.random() * 0.7 + 0.2,
@@ -51,11 +52,11 @@ export default function SplashScreen({ onFinish }) {
         // Draw connecting lines
         particlesRef.current.forEach(p2 => {
           const dist = Math.hypot(p.x - p2.x, p.y - p2.y);
-          if (dist < 100) {
+          if (dist < (isMobile ? 70 : 100)) {
             ctx.beginPath();
             ctx.moveTo(p.x, p.y);
             ctx.lineTo(p2.x, p2.y);
-            ctx.strokeStyle = `hsla(${p.hue}, 80%, 70%, ${0.08 * (1 - dist / 100)})`;
+            ctx.strokeStyle = `hsla(${p.hue}, 80%, 70%, ${0.08 * (1 - dist / (isMobile ? 70 : 100))})`;
             ctx.lineWidth = 0.5;
             ctx.stroke();
           }
@@ -83,7 +84,7 @@ export default function SplashScreen({ onFinish }) {
   }, [onFinish]);
 
   return (
-    <div style={styles.wrapper}>
+    <div style={styles.wrapper} onClick={onFinish} role="button" tabIndex={0} aria-label="Dismiss splash screen">
       {/* Particle canvas */}
       <canvas ref={canvasRef} style={styles.canvas} />
 
@@ -93,6 +94,15 @@ export default function SplashScreen({ onFinish }) {
         opacity: phase === 'exit' ? 0 : 1,
         transition: 'opacity 0.7s ease',
       }} />
+
+      {/* Skip button for mobile accessibility */}
+      <button 
+        style={styles.skipButton}
+        onClick={(e) => { e.stopPropagation(); onFinish(); }}
+        aria-label="Skip splash screen"
+      >
+        Skip ›
+      </button>
 
       {/* Brand content */}
       <div style={{
@@ -162,7 +172,7 @@ export default function SplashScreen({ onFinish }) {
         {/* Divider line */}
         <div style={{
           ...styles.divider,
-          width: phase === 'tagline' ? '260px' : '0px',
+          width: phase === 'tagline' ? 'min(260px, 80vw)' : '0px',
           transition: 'width 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s',
         }} />
 
@@ -215,6 +225,8 @@ const styles = {
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
+    cursor: 'pointer',
+    padding: '20px',
   },
   canvas: {
     position: 'absolute',
@@ -225,12 +237,28 @@ const styles = {
     position: 'absolute',
     top: '50%',
     left: '50%',
-    width: '600px',
-    height: '600px',
+    width: 'min(600px, 90vw)',
+    height: 'min(600px, 90vw)',
     borderRadius: '50%',
     background: 'radial-gradient(circle, rgba(129,140,248,0.22) 0%, transparent 70%)',
     animation: 'orbPulse 2.4s ease-in-out infinite',
     pointerEvents: 'none',
+  },
+  skipButton: {
+    position: 'absolute',
+    top: 'max(16px, env(safe-area-inset-top, 16px))',
+    right: 'max(16px, env(safe-area-inset-right, 16px))',
+    zIndex: 10,
+    background: 'rgba(255, 255, 255, 0.08)',
+    border: '1px solid rgba(255, 255, 255, 0.15)',
+    borderRadius: '99px',
+    color: 'rgba(255, 255, 255, 0.75)',
+    padding: '8px 16px',
+    fontSize: '12px',
+    fontWeight: '600',
+    cursor: 'pointer',
+    backdropFilter: 'blur(10px)',
+    transition: 'all 0.2s ease',
   },
   content: {
     position: 'relative',
@@ -238,11 +266,13 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    gap: '18px',
+    gap: '16px',
+    maxWidth: '100%',
+    textAlign: 'center',
   },
   iconRing: {
-    width: '90px',
-    height: '90px',
+    width: 'min(90px, 22vw)',
+    height: 'min(90px, 22vw)',
     borderRadius: '50%',
     background: 'rgba(129,140,248,0.12)',
     border: '1.5px solid rgba(129,140,248,0.35)',
@@ -257,14 +287,16 @@ const styles = {
     flexWrap: 'wrap',
     justifyContent: 'center',
     gap: '0px',
+    maxWidth: '100%',
+    padding: '0 8px',
   },
   brandChar: {
     display: 'inline-block',
-    fontSize: 'clamp(36px, 6vw, 64px)',
+    fontSize: 'clamp(28px, 6.5vw, 64px)',
     fontWeight: '800',
     fontFamily: "'Inter', 'Segoe UI', sans-serif",
     letterSpacing: '-0.5px',
-    lineHeight: 1.1,
+    lineHeight: 1.15,
     textShadow: '0 0 40px rgba(129,140,248,0.5)',
   },
   divider: {
@@ -274,13 +306,14 @@ const styles = {
     overflow: 'hidden',
   },
   tagline: {
-    fontSize: '15px',
+    fontSize: 'clamp(11px, 3.2vw, 15px)',
     color: 'rgba(148,163,184,0.9)',
     fontFamily: "'Inter', 'Segoe UI', sans-serif",
     fontWeight: '400',
-    letterSpacing: '1.5px',
+    letterSpacing: '1px',
     textTransform: 'uppercase',
     margin: 0,
+    padding: '0 12px',
   },
   dotsRow: {
     display: 'flex',
